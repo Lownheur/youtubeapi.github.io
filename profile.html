@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    <h1> Your profile</h1>
+    <h2 id="name">name :</h2>
+    <img id="image"/>
+    <button onclick="logout()">Logout</button>
+
+    <h2>Post a YouTube Video:</h2>
+    <form id="videoForm">
+        <label for="videoTitle">Title:</label>
+        <input type="text" id="videoTitle" name="videoTitle" required><br>
+    
+        <label for="videoDescription">Description:</label>
+        <textarea id="videoDescription" name="videoDescription" rows="4" required></textarea><br>
+    
+        <label for="videoFile">Upload Video:</label>
+        <input type="file" id="videoFile" name="videoFile" accept="video/*" required><br>
+    
+        <button type="button" onclick="postVideo()">Post Video</button>
+    </form>
+</form>
+</body>
+<script>
+
+let params = {}
+let regex = /([^&=]+)=([^&]*)/g, m
+
+while(m = regex.exec(location.href)){
+    params[decodeURIComponent(m[1])] = decodeURIComponent(m[2]);
+}
+if(Object.keys(params).length > 0){
+    localStorage.setItem('authinfo', JSON.stringify(params));
+}
+
+    //hide access token
+    window.history.pushState({},document.title,'/'+"profile.html")
+
+    let info = JSON.parse(localStorage.getItem('authinfo'));
+    
+    console.log(info['access_token'])
+
+    fetch("https://www.googleapis.com/oauth2/v3/userinfo", {
+    headers: {
+        "Authorization": `Bearer ${info['access_token']}`
+    }
+})
+    .then(response => response.json())
+    .then(userInfo => { 
+        console.log(userInfo);
+        document.getElementById('name').innerHTML += userInfo.name;
+        document.getElementById('image').setAttribute('src', userInfo.picture);
+    })
+    
+    function logout(){
+        fetch("https://oauth2.googleapis.com/revoke?token=" + info['access_token'], {
+        method: 'POST',
+        headers: {
+            'content-type': 'application/x-www-form-urlencoded'
+        }
+        })
+        .then((data)=>{
+            location.href = "http://localhost:5500/index.html"
+        })
+    }
+    function postVideo() {
+    const videoForm = document.getElementById('videoForm');
+    const videoTitle = videoForm.elements['videoTitle'].value;
+    const videoDescription = videoForm.elements['videoDescription'].value;
+    const videoFile = videoForm.elements['videoFile'].files[0];
+
+    const videoData = new FormData();
+    videoData.append('snippet', JSON.stringify({
+        title: videoTitle,
+        description: videoDescription
+    }));
+    videoData.append('status', JSON.stringify({
+        privacyStatus: 'public'
+    }));
+    videoData.append('video', videoFile);
+
+    fetch("https://www.googleapis.com/upload/youtube/v3/videos?part=snippet,status", {
+        method: 'POST',
+        headers: {
+            'Authorization': `Bearer ${info['access_token']}`
+        },
+        body: videoData
+    })
+    .then(response => response.json())
+    .then(videoInfo => {
+        console.log(videoInfo);
+        alert('Video posted successfully!');
+    })
+    .catch(error => {
+        console.error('Error posting video:', error);
+    });
+}
+
+</script>
+</html>
+
+
