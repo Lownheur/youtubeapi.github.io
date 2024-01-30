@@ -6,7 +6,7 @@ function signIn(){
 
     let params =  {
         "client_id":"91235972960-annfrc3am50iqsghflh5e1f73jjh7al1.apps.googleusercontent.com",
-        "redirect_uri":"http://127.0.0.1:5500/profile.html",
+        "redirect_uri":"https://lownheur.com/youtubeapi.github.io/profile.html",
         "response_type":"token",
         "scope":"https://www.googleapis.com/auth/userinfo.profile https://www.googleapis.com/auth/youtube.readonly" ,
         "include_granted_scopes":"true",
